@@ -72,6 +72,37 @@ class CLikeTranspiler(ast.NodeVisitor):
             return c_symbol(node)
         else:
             return super(CLikeTranspiler, self).visit(node)
+    
+    def visit_JoinedStr(self, node):
+#        JoinedStr(values)
+        formatted_values = [self.visit_FormattedValue(value) for value in node.values if type(value) is not ast.Constant]
+        response = 'format!(\"'
+        for value in node.values:
+            if type(value) is ast.Constant:
+                response += str(value.value)
+            elif value.format_spec is None:
+                response += "{:?}"
+            else:
+                response += self.visit_FormatSpec(value.format_spec)
+        response += '\",' + ','.join(formatted_values) + ')'
+        return response
+
+    def visit_FormatSpec(self, node):
+        # TODO: Come up with a more sophisticated method of doing this... probably do regex to translate
+        formatting_string = node.values[0].s
+        return '{:#' + formatting_string + '}'
+
+
+    def visit_FormattedValue(self, node):
+#        FormattedValue(expr value, int conversion, expr? format_spec)
+        if node.value is not None:
+            if type(node.value) is str:
+                return self.visit_Str(node)
+            else:
+                return self.visit(node.value)
+        else:
+            return node.value
+
 
     def visit_Name(self, node):
         if node.id in self.builtin_constants:

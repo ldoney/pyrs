@@ -96,6 +96,14 @@ class RustTranspiler(CLikeTranspiler):
         if node.annotation:
             typename = self.visit(node.annotation)
         return (typename, id)
+    
+    def visit_JoinedStr(self, node):
+#        FormattedValue(expr value, int conversion, expr? format_spec)
+        return super(RustTranspiler, self).visit_JoinedStr(node)
+    
+    def visit_FormattedValue(self, node):
+#        FormattedValue(expr value, int conversion, expr? format_spec)
+        return super(RustTranspiler, self).visit_FormattedValue(node)
 
     def visit_Lambda(self, node):
         _, args = self.visit(node.args)
@@ -128,7 +136,7 @@ class RustTranspiler(CLikeTranspiler):
             args += [self.visit(a) for a in node.args]
         if node.keywords:
             args += [self.visit(kw.value) for kw in node.keywords]
-        
+
         if args:
             args = ", ".join(args)
         else:
